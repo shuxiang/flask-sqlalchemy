@@ -2,8 +2,10 @@
 from flask import session
 from sqlalchemy.orm.exc import UnmappedClassError
 from sqlalchemy import orm
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 
 from flask_sqlalchemy import SQLAlchemy, itervalues
+from flask_sqlalchemy.model import DefaultMeta
 
 sys_type = type
 
@@ -46,6 +48,39 @@ class MbSQLAlchemy(SQLAlchemy):
                 result.append(table)
 
         return result
+
+    def make_declarative_base(self, model, metadata=None):
+        """Creates the declarative base that all models will inherit from.
+
+        :param model: base model class (or a tuple of base classes) to pass
+            to :func:`~sqlalchemy.ext.declarative.declarative_base`. Or a class
+            returned from ``declarative_base``, in which case a new base class
+            is not created.
+        :param: metadata: :class:`~sqlalchemy.MetaData` instance to use, or
+            none to use SQLAlchemy's default.
+
+        .. versionchanged 2.3.0::
+            ``model`` can be an existing declarative base in order to support
+            complex customization such as changing the metaclass.
+        """
+        if not isinstance(model, DeclarativeMeta):
+            model = declarative_base(
+                cls=model,
+                name='Model',
+                metadata=metadata,
+                metaclass=DefaultMeta
+            )
+
+        # if user passed in a declarative base and a metaclass for some reason,
+        # make sure the base uses the metaclass
+        if metadata is not None and model.metadata is not metadata:
+            model.metadata = metadata
+
+        if not getattr(model, 'query_class', None):
+            model.query_class = self.Query
+
+        model.query = _QueryProperty(self)
+        return model
 
 
 

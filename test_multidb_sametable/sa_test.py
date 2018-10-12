@@ -1,4 +1,6 @@
 #coding=utf8
+import sys
+sys.path.append('..')
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:////home/sx/soft/flask-sqlalchemy/sa0.db'
 SQLALCHEMY_BINDS = {
@@ -93,10 +95,10 @@ def login():
 
 @app.route('/createpost')
 def createpost():
-    print '----------->', Post
+    print '-----------> post 1', Post
     #print '---------> query: ', Post.query, dir(Post)
     print Post.query.all()
-    print '==============='
+    print '=============== post 1'
     p1_2 = Post.query.filter(Post.username=='u1_1').first()
     if not p1_2:
         p1_2 = Post(username='u1_1')
@@ -126,9 +128,9 @@ def login2():
 
 @app.route('/createpost2')
 def createpost2():
-    print '----------->', Post
+    print '-----------> post 2', Post
     print Post.query.all()
-    print '==============='
+    print '=============== post 2'
     p2_1 = Post.query.filter_by(username='u2_1').first()
     if not p2_1:
         p2_1 = Post(username='u2_1')
@@ -140,7 +142,7 @@ def createpost2():
     if not Cate.query.filter_by(username='u2_1').count():
         c1 = Cate(username='u2_1')
         db.session.add(c1)
-        db.session.flush()
+        db.session.commit()
     print db.session.query(Post).filter_by(username='u2_1').all()
     print db.session.query(Post).filter(Post.username==Cate.username).all()
 
@@ -166,5 +168,6 @@ if __name__ == '__main__':
 
 
 """
-无法动态增加binds, 因为这已经设计到sqlalchemy与flask架构实现本身
+无法动态增加binds, 因为这已经设计到sqlalchemy与flask架构实现本身;
+requirements: sqlalchemy==1.2.0
 """
