@@ -11,6 +11,9 @@ def test_scripts():
     bind = BINDS_MAP.get('u2')
     # # 对函数外部的变量赋值, 会将这个变量当成本地变量, 出现UnboundLocalError
     with app.test_request_context('/'):
+        session['bind'] = 'b2'
+        print Post.query.all()
+        print Cate.query.all()
         print '============== job ==========', bind
         Cate2 = Cate.database(bind)
         Post2 = Post.database(bind)
