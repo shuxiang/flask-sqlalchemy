@@ -10,8 +10,8 @@ def test():
     print '================== test jobs ==================='
     bind = BINDS_MAP.get('u2')
     print '============== job ==========', bind
-    Post2 = Post.database(bind)
     Cate2 = Cate.database(bind)
+    Post2 = Post.database(bind)
     print Post2.query.all()
     print Cate2.query.all()
 

@@ -2,10 +2,10 @@
 import sys
 sys.path.append('..')
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:////home/sx/soft/flask-sqlalchemy/sa0.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///./sa0.db'
 SQLALCHEMY_BINDS = {
-    'b1':        'sqlite:////home/sx/soft/flask-sqlalchemy/sa1.db',
-    'b2':      'sqlite:////home/sx/soft/flask-sqlalchemy/sa2.db'
+    'b1':        'sqlite:///./sa1.db',
+    'b2':      'sqlite:///./sa2.db'
 }
 BINDS_MAP = {
     'u1': 'b1',
@@ -28,6 +28,7 @@ class MyModel(Model):
     # in this case we're just using a custom BaseQuery class,
     # but you can add other stuff as well
     query_class = BaseQuery
+    __bind_key__ = None
 
     def __new__(cls, *args, **kwargs):
         if not getattr(cls, '__bind_key__', None):
@@ -40,6 +41,7 @@ class MyModel(Model):
     def database(cls, tenant):
         # tenant to bind
         bind = tenant
+        print cls, cls.__name__, cls.__table__.info, sys_type(cls.__table__)
         return sys_type(cls.__name__, (cls,), {"__bind_key__": bind})
 
 
@@ -143,6 +145,8 @@ def createpost2():
         c1 = Cate(username='u2_1')
         db.session.add(c1)
         db.session.commit()
+    print Post.query.all()
+    print Cate.query.all()
     print db.session.query(Post).filter_by(username='u2_1').all()
     print db.session.query(Post).filter(Post.username==Cate.username).all()
 
@@ -163,11 +167,16 @@ def createpost2():
 
 
 if __name__ == '__main__':
-    db.create_all()
+    db.reflect()
     app.run(port=6666, debug=True)
 
 
 """
 无法动态增加binds, 因为这已经设计到sqlalchemy与flask架构实现本身;
 requirements: sqlalchemy==1.2.0
+migration: 逐个db未升级? 未解决
+restless: 因为restless中无法获得tenant, 无法与之兼容
+只能用company_id作为多租户分库,不能用完整的tenant, 因为存在__all__的情况
+no support db.engine.execute(mover_sql)
+app/__init__.py P180 automap
 """

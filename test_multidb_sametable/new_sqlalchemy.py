@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import UnmappedClassError
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 
-from flask_sqlalchemy import SQLAlchemy, itervalues
+from flask_sqlalchemy import SQLAlchemy, itervalues, string_types, BaseQuery, Model
 from flask_sqlalchemy.model import DefaultMeta
 
 sys_type = type
@@ -30,11 +30,34 @@ class _QueryProperty(object):
 
 class MbSQLAlchemy(SQLAlchemy):
     """support multi db for binds; binds have some tables"""
+    def __init__(self, app=None, *args, **kwargs):
+
+        super(MbSQLAlchemy, self).__init__(app=app, *args, **kwargs)
+        # 要初始化metadata, must init meta
+        self._get_metadata_for_all_tables(app)
 
     def get_model_by_tablename(self, tablename):
         for c in self.Model._decl_class_registry.values():
             if hasattr(c, '__tablename__') and c.__tablename__ == tablename:
                 return c
+
+    def _get_metadata_for_all_tables(self, app, bind='__all__', skip_tables=False):
+        app = self.get_app(app)
+
+        if bind == '__all__':
+            binds = [None] + list(app.config.get('SQLALCHEMY_BINDS') or ())
+        elif isinstance(bind, string_types) or bind is None:
+            binds = [bind]
+        else:
+            binds = bind
+
+        for bind in binds:
+            extra = {}
+            if not skip_tables:
+                tables = self.get_tables_for_bind(bind)
+                extra['tables'] = tables
+
+            self.get_metadata(bind=bind)
 
     def get_tables_for_bind(self, bind=None):
         """Returns a list of all tables relevant for a bind."""
