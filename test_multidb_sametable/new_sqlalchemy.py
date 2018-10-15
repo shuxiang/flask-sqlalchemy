@@ -17,8 +17,10 @@ class _QueryProperty(object):
     def __get__(self, obj, type):
         try:
             # 非app的http请求里, 存在无法获得tenant的问题; 只能用multi_db那种方式手动传入
-            if not getattr(type, '__bind_key__', None) and not getattr(type, '__restless__', False):
+            print obj, type, "__bind_key__", getattr(type, '__bind_key__', None), '__restless__', getattr(type, '__restless__', False), '__with_binds__', getattr(type, '__with_binds__', False)
+            if getattr(type, '__bind_key__', None) is None and not getattr(type, '__restless__', False) and getattr(type, '__with_binds__', False):
                 bind = session['bind']
+                print '=======bind:', bind
                 classname = str(type).split('.')[-1][:-2]
                 type = sys_type(classname, (type,), {"__bind_key__": bind})
             mapper = orm.class_mapper(type)

@@ -647,6 +647,9 @@ class APIManager(object):
         # Finally, record that this APIManager instance has created an API for
         # the specified model.
         self.created_apis_for[model] = APIInfo(collection_name, blueprint.name)
+        
+        # for mutil tenant use
+        model.__restless__ = False
         return blueprint
 
     def create_api(self, *args, **kw):

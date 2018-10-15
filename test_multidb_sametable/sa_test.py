@@ -31,7 +31,7 @@ class MyModel(Model):
     __bind_key__ = None
 
     def __new__(cls, *args, **kwargs):
-        if not getattr(cls, '__bind_key__', None):
+        if getattr(cls, '__bind_key__', None) is not None:
             print '<<<<==========new model class'
             print session['bind']
             Model.__bind_key__ = session['bind']
@@ -79,10 +79,16 @@ class Cate(db.Model):
 
 @app.route('/createuser')
 def createuser():
-    u1 = User(username='u1')
-    u2 = User(username='u2')
-    db.session.add(u1)
-    db.session.add(u2)
+    u1 = User.query.filter_by(username='u1').first()
+    if not u1:
+        u1 = User(username='u1')
+        db.session.add(u1)
+
+    u2 = User.query.filter_by(username='u2').first()
+    if not u2:
+        u2 = User(username='u2')
+        db.session.add(u2)
+
     db.session.commit()
 
     session['tenant'] = 'u1'
@@ -114,11 +120,12 @@ def createpost():
     #print session['tenant']
     #print Post.__bind_key__
 
-    # p1 = Post(username='u1')
-    # p2 = Post(username='u2')
-    # db.session.add(p1)
-    # db.session.add(p2)
-    # db.session.commit()
+    if not Post.query.filter_by(username='u1').count():
+        p1 = Post(username='u1')
+        p2 = Post(username='u2')
+        db.session.add(p1)
+        db.session.add(p2)
+        db.session.commit()
 
     return 'done'
 
@@ -132,9 +139,7 @@ def login2():
 
 @app.route('/createpost2')
 def createpost2():
-    print '-----------> post 2', Post
     print Post.query.all()
-    print '=============== post 2'
     p2_1 = Post.query.filter_by(username='u2_1').first()
     if not p2_1:
         p2_1 = Post(username='u2_1')
@@ -153,13 +158,13 @@ def createpost2():
     print db.session.query(Post).filter(Post.username==Cate.username).all()
 
 
-    # # different bind tables can't join
-    # u21 = User.query.filter_by(username='u2_1').first()
-    # if not u21:
-    #     u21 = User(username='u2_1')
-    #     db.session.add(u21)
-    #     db.session.flush()
-    # print db.session.query(Post).filter(Post.username==Cate.username, Post.username==User.username).all()
+    # different bind tables can't join
+    u21 = User.query.filter_by(username='u2_1').first()
+    if not u21:
+        u21 = User(username='u2_1')
+        db.session.add(u21)
+        db.session.flush()
+    print db.session.query(Post).filter(Post.username==Cate.username, Post.username=='u2_1').all()
 
     db.session.commit()
 
