@@ -31,7 +31,7 @@ class MyModel(Model):
     __bind_key__ = None
 
     def __new__(cls, *args, **kwargs):
-        if getattr(cls, '__bind_key__', None) is not None:
+        if getattr(cls, '__bind_key__', None) is not None and getattr(cls, '__with_binds__', False):
             print '<<<<==========new model class'
             print session['bind']
             Model.__bind_key__ = session['bind']
@@ -158,7 +158,7 @@ def createpost2():
     print db.session.query(Post).filter(Post.username==Cate.username).all()
 
 
-    # different bind tables can't join
+    # sqlite3 different bind tables can't join; mysql not test yield
     u21 = User.query.filter_by(username='u2_1').first()
     if not u21:
         u21 = User(username='u2_1')
