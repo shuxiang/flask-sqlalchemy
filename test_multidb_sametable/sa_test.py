@@ -45,7 +45,9 @@ class MyModel(Model):
         return sys_type(cls.__name__, (cls,), {"__bind_key__": bind})
 
 
-db = MbSQLAlchemy(app, model_class=MyModel)
+db = MbSQLAlchemy(model_class=MyModel) # app=app
+db.init_app(app)
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

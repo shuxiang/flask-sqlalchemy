@@ -29,6 +29,7 @@ class RequestContextTask(Task):
     def __call__(self, *args, **kwargs):
         with app.test_request_context():
             # 无法inspect得到test.apply_async的参数, 只能固定tenant参数的位置为第一个
+            # print dir(self), inspect.getargspec(self.s)
             session['bind'] = args[0]
             return super(RequestContextTask, self).__call__(*args, **kwargs)
 
@@ -62,5 +63,6 @@ def test_celery():
     return 'done'
 
 if __name__ == '__main__':
+    ## celery -A test_celery.celery --concurrency=1 worker -l debug --logfile=/appdata/log/celery_test.log -Q test
     db.create_all()
     app.run(port=7777, debug=True)

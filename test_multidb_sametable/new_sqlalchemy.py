@@ -17,7 +17,7 @@ class _QueryProperty(object):
     def __get__(self, obj, type):
         try:
             # 非app的http请求里, 存在无法获得tenant的问题; 只能用multi_db那种方式手动传入
-            if not getattr(type, '__bind_key__', None):
+            if not getattr(type, '__bind_key__', None) and not getattr(type, '__restless__', False):
                 bind = session['bind']
                 classname = str(type).split('.')[-1][:-2]
                 type = sys_type(classname, (type,), {"__bind_key__": bind})
@@ -34,7 +34,14 @@ class MbSQLAlchemy(SQLAlchemy):
 
         super(MbSQLAlchemy, self).__init__(app=app, *args, **kwargs)
         # 要初始化metadata, must init meta
+        if app:
+            self._get_metadata_for_all_tables(app)
+
+    def init_app(self, app=None):
         self._get_metadata_for_all_tables(app)
+        self.app = app
+        super(MbSQLAlchemy, self).init_app(app)
+
 
     def get_model_by_tablename(self, tablename):
         for c in self.Model._decl_class_registry.values():
