@@ -2,10 +2,10 @@
 import sys
 sys.path.append('..')
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///./sa0.db'
+SQLALCHEMY_DATABASE_URI = 'mysql://root:870129@127.0.0.1:3306/test?charset=utf8' #'sqlite:///./sa0.db'
 SQLALCHEMY_BINDS = {
-    'b1':        'sqlite:///./sa1.db',
-    'b2':      'sqlite:///./sa2.db'
+    'b1':        'mysql://root:870129@127.0.0.1:3306/test1?charset=utf8',#'sqlite:///./sa1.db',
+    'b2':        'mysql://root:870129@127.0.0.1:3306/test2?charset=utf8',#'sqlite:///./sa2.db'
 }
 BINDS_MAP = {
     'u1': 'b1',
@@ -62,6 +62,10 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(80), unique=True)
+
+    # for test migrate
+    extra1 = db.Column(db.String(100), default='')
+    extra2 = db.Column(db.Integer, server_default='0')
 
     def __repr__(self):
         return '<Post %r, %s>' % (self.username, self.id)

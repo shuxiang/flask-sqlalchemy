@@ -40,9 +40,9 @@ class MbSQLAlchemy(SQLAlchemy):
             self._get_metadata_for_all_tables(app)
 
     def init_app(self, app=None):
-        self._get_metadata_for_all_tables(app)
         self.app = app
         super(MbSQLAlchemy, self).init_app(app)
+        self._get_metadata_for_all_tables(app)
 
 
     def get_model_by_tablename(self, tablename):
