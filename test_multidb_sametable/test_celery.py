@@ -16,22 +16,17 @@ class CeleryBase(Celery):
             self.conf.update(app.config)
         except:pass
         TaskBase = self.Task
+
         class ContextTask(TaskBase):
             abstract = True
             def __call__(self, *args, **kwargs):
-                with app.app_context():
+                # 无法inspect得到test.apply_async的参数, 只能固定tenant参数的位置为第一个
+                #with app.app_context():
+                with app.test_request_context():
+                    session['bind'] = args[0]
                     return TaskBase.__call__(self, *args, **kwargs)
         self.Task = ContextTask
 
-class RequestContextTask(Task):
-    """Base class for tasks that run inside a Flask request context."""
-    abstract = True
-    def __call__(self, *args, **kwargs):
-        with app.test_request_context():
-            # 无法inspect得到test.apply_async的参数, 只能固定tenant参数的位置为第一个
-            # print dir(self), inspect.getargspec(self.s)
-            session['bind'] = args[0]
-            return super(RequestContextTask, self).__call__(*args, **kwargs)
 
 
 SQLALCHEMY_DATABASE_URI = 'mysql://root:870129@127.0.0.1:3306/test?charset=utf8'
@@ -45,7 +40,6 @@ app.config['BROKER_URL'] = BROKER_URL
 app.config['RESULT_BACKEND'] = RESULT_BACKEND
 
 celery = CeleryBase('test_celery')
-celery.Task = RequestContextTask
 
 celery.conf.update(CELERY_DEFAULT_QUEUE = os.environ.get('TASK_QUEUE_NAME', 'test'))
 celery.init_app(app)
