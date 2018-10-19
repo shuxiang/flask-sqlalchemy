@@ -10,6 +10,8 @@ print Post, Cate
 def test_scripts():
     bind = BINDS_MAP.get('u2')
     # # 对函数外部的变量赋值, 会将这个变量当成本地变量, 出现UnboundLocalError
+    print db.session
+    print dir(db.session)
 
     with app.test_request_context('/', headers={'company_id': 555}): # werkzueg will convert to Company-Id
         session['bind'] = 'b2'

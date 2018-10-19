@@ -25,7 +25,9 @@ class _QueryProperty(object):
                 type = sys_type(classname, (type,), {"__bind_key__": bind})
             mapper = orm.class_mapper(type)
             if mapper:
-                return type.query_class(mapper, session=self.sa.session())
+                query =  type.query_class(mapper, session=self.sa.session())
+                query.model_class = type
+                return query
         except UnmappedClassError:
             return None
 

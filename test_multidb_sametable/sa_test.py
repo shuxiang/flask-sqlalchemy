@@ -81,6 +81,12 @@ class Cate(db.Model):
         return '<Cate %r, %s>' % (self.username, self.id)
 
 
+
+@app.before_request
+def before_request():
+    print '===============================before_request=============================='
+
+
 @app.route('/createuser')
 def createuser():
     u1 = User.query.filter_by(username='u1').first()

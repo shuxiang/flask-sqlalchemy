@@ -59,4 +59,4 @@ def test_celery():
 if __name__ == '__main__':
     ## celery -A test_celery.celery --concurrency=1 worker -l debug --logfile=/appdata/log/celery_test.log -Q test
     db.create_all()
-    app.run(port=7777, debug=True)
+    app.run(port=7777, debug=True, threaded=True)

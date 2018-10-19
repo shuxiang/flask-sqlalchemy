@@ -27,9 +27,10 @@ from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.schema import MetaData
 from sqlalchemy.orm.exc import UnmappedClassError
-from sqlalchemy.orm.session import Session as SessionBase
+#from sqlalchemy.orm.session import Session as SessionBase
+from .horizontal_shard import ShardedSession as SessionBase
 
-from flask_sqlalchemy.model import Model
+from .model import Model
 from ._compat import itervalues, string_types, xrange
 from .model import DefaultMeta
 
@@ -122,6 +123,16 @@ def _calling_context(app_path):
     return '<unknown>'
 
 
+def shard_chooser(mapper, instance, clause=None):
+    if instance:
+        return instance.__bind_key__
+
+def id_chooser(query, ident):
+    return [query.model_class.__bind_key__]
+
+def query_chooser(query):
+    return [query.model_class.__bind_key__]
+
 class SignallingSession(SessionBase):
     """The signalling session is the default session that Flask-SQLAlchemy
     uses.  It extends the default session system with bind selection and
@@ -147,12 +158,14 @@ class SignallingSession(SessionBase):
         if track_modifications is None or track_modifications:
             _SessionSignalEvents.register(self)
 
-        SessionBase.__init__(
-            self, autocommit=autocommit, autoflush=autoflush,
-            bind=bind, binds=binds, **options
-        )
+        # SessionBase.__init__(
+        #     self, autocommit=autocommit, autoflush=autoflush,
+        #     bind=bind, binds=binds, **options
+        # )
+        super(SignallingSession, self).__init__(shard_chooser, id_chooser, query_chooser, shards=db.get_engines_of_binds(app),
+                autocommit=autocommit, autoflush=autoflush, bind=bind, binds=binds, **options)
 
-    def get_bind(self, mapper=None, clause=None):
+    def get_bind(self, mapper=None, clause=None, **kw):
         # mapper is None if someone tries to just get a connection
         if mapper is not None:
             info = getattr(mapper.mapped_table, 'info', {})
@@ -160,7 +173,8 @@ class SignallingSession(SessionBase):
             if bind_key is not None:
                 state = get_state(self.app)
                 return state.db.get_engine(self.app, bind=bind_key)
-        return SessionBase.get_bind(self, mapper, clause)
+
+        return SessionBase.get_bind(self, mapper, clause=clause, **kw)
 
 
 class _SessionSignalEvents(object):
@@ -950,6 +964,11 @@ class SQLAlchemy(object):
             tables = self.get_tables_for_bind(bind)
             retval.update(dict((table, engine) for table in tables))
         return retval
+
+    def get_engines_of_binds(self, app=None):
+        app = self.get_app(app)
+        binds = [None] + list(app.config.get('SQLALCHEMY_BINDS') or ())
+        return dict((bind, self.get_engine(app, bind)) for bind in binds)
 
     def _execute_for_all_tables(self, app, bind, operation, skip_tables=False):
         app = self.get_app(app)
